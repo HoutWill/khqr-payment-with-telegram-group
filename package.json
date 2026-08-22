@@ -1,0 +1,30 @@
+{
+  "name": "khqr-shop-telegram-matcher",
+  "version": "1.0.0",
+  "description": "E-Commerce Shop with dynamic KHQR, ABA Mobile Deep-Link, and Telegram Group Transaction Matching Engine",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node test/test-matcher.js",
+    "login-telegram": "node scripts/login-telegram.js"
+  },
+  "keywords": [
+    "khqr",
+    "aba-pay",
+    "bakong",
+    "telegram-bot",
+    "cambodia-payment",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "qrcode": "^1.5.4",
+    "uuid": "^11.1.0"
+  }
+}

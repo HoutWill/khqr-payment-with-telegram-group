@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAM-SHOP | Dynamic KHQR & ABA Direct Pay</title>
+  <meta name="description" content="Modern Cambodian E-Commerce Shop with dynamic KHQR, ABA Mobile direct app checkout, and automated Telegram bot transaction verification.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <div class="container announcement-inner">
+      <span><i class="fa-solid fa-bolt-lightning text-accent"></i> Instant KHQR & ABA Mobile App Checkout with Auto-Telegram Bot Verification!</span>
+      <div class="top-nav-links">
+        <a href="/admin.html" class="admin-link"><i class="fa-solid fa-robot"></i> Telegram Matcher Studio & Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand-logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-qrcode"></i>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">CAM<span class="gradient-text">SHOP</span></span>
+          <span class="logo-subtitle">KHQR • ABA • BAKONG</span>
+        </div>
+      </a>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search products, gadgets, beverages..." autocomplete="off">
+        <button id="clearSearch" class="clear-btn" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <div class="currency-badge">
+          <span class="flag">🇰🇭</span>
+          <span class="rate-info">1 USD ≈ <span id="headerExchangeRate">4,100</span> KHR</span>
+        </div>
+        
+        <button id="cartToggleBtn" class="cart-btn" aria-label="Shopping Cart">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span class="cart-label">Cart</span>
+          <span id="cartCountBadge" class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="hero-pill">
+          <span class="pulse-dot"></span> Next-Gen Cambodia Payment Flow
+        </div>
+        <h1 class="hero-title">Shop Premium Tech & Lifestyle with <span class="khqr-highlight">KHQR</span> & <span class="aba-highlight">ABA Direct</span></h1>
+        <p class="hero-description">
+          Seamless checkout with dynamic Bakong KHQR QR codes, direct ABA Mobile app deep-links, and automatic order verification powered by Telegram ABA Merchant Bot.
+        </p>
+        <div class="hero-features">
+          <div class="feature-item">
+            <i class="fa-solid fa-qrcode feature-icon khqr-color"></i>
+            <div>
+              <strong>Dynamic KHQR</strong>
+              <span>Exact amount & memo encoded</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fa-solid fa-mobile-screen-button feature-icon aba-color"></i>
+            <div>
+              <strong>ABA Direct Pay</strong>
+              <span>One-tap mobile banking launch</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fa-brands fa-telegram feature-icon telegram-color"></i>
+            <div>
+              <strong>Telegram Matcher</strong>
+              <span>Instant auto-confirmation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="khqr-preview-card">
+          <div class="khqr-card-header">
+            <span class="bakong-brand">KHQR</span>
+            <span class="aba-brand-tag"><i class="fa-solid fa-building-columns"></i> ABA Bank</span>
+          </div>
+          <div class="preview-qr-box">
+            <div class="qr-mockup">
+              <i class="fa-solid fa-qrcode qr-mockup-icon"></i>
+            </div>
+            <div class="scan-ring"></div>
+          </div>
+          <div class="preview-footer">
+            <div class="preview-status">
+              <span class="live-dot"></span> Real-time Bot Match Active
+            </div>
+            <div class="payment-partners">
+              <span class="bank-pill">ABA Mobile</span>
+              <span class="bank-pill">Bakong</span>
+              <span class="bank-pill">ACLEDA</span>
+              <span class="bank-pill">Wing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Filter Bar -->
+  <section class="filter-section">
+    <div class="container">
+      <div class="filter-wrapper">
+        <div class="category-tabs" id="categoryTabs">
+          <button class="cat-tab active" data-category="All">All Items</button>
+          <button class="cat-tab" data-category="Electronics">Electronics</button>
+          <button class="cat-tab" data-category="Wearables">Wearables</button>
+          <button class="cat-tab" data-category="Beverages">Beverages</button>
+          <button class="cat-tab" data-category="Accessories">Accessories</button>
+        </div>
+        <div class="item-count-indicator">
+          Showing <span id="visibleProductsCount">0</span> items
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Catalog Grid -->
+  <main class="container main-content">
+    <div id="productGrid" class="product-grid">
+      <!-- Dynamic Products Rendered Here -->
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading premium products...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Slide-out Shopping Cart Drawer -->
+  <div id="cartDrawerBackdrop" class="drawer-backdrop"></div>
+  <aside id="cartDrawer" class="cart-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <h3>Your Shopping Cart</h3>
+        <span id="drawerItemCount" class="drawer-badge">0 items</span>
+      </div>
+      <button id="closeCartBtn" class="close-drawer-btn" aria-label="Close cart">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Cart Items Body -->
+    <div id="cartItemsContainer" class="drawer-body">
+      <!-- Rendered dynamically -->
+      <div class="empty-cart-state">
+        <div class="empty-cart-icon"><i class="fa-solid fa-cart-arrow-down"></i></div>
+        <h4>Your cart is empty</h4>
+        <p>Explore our catalog and add some awesome gear!</p>
+        <button class="btn btn-primary start-shopping-btn" id="startShoppingBtn">Browse Store</button>
+      </div>
+    </div>
+
+    <!-- Cart Footer & Summary -->
+    <div id="cartFooter" class="drawer-footer" style="display: none;">
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="cartSubtotalUsd">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping (Cambodia-wide)</span>
+          <span id="cartShippingUsd">$2.50</span>
+        </div>
+        <div class="free-shipping-promo" id="freeShippingPromo">
+          <i class="fa-solid fa-truck-fast"></i> Add <strong id="amountForFreeShipping">$0.00</strong> more for Free Delivery!
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total-row">
+          <div>
+            <strong>Total Amount</strong>
+            <div class="khr-equivalent" id="cartTotalKhr">៛0 KHR</div>
+          </div>
+          <strong class="total-usd-highlight" id="cartTotalUsd">$0.00</strong>
+        </div>
+      </div>
+
+      <button id="proceedToCheckoutBtn" class="btn btn-checkout">
+        <span>Proceed to Checkout</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Checkout & KHQR Payment Modal -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-card checkout-modal-card">
+      <div class="modal-header">
+        <div class="modal-brand">
+          <span class="khqr-badge">KHQR</span>
+          <h4>Express Checkout & Payment</h4>
+        </div>
+        <button id="closeCheckoutBtn" class="modal-close-btn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Step 1: Customer Details Form -->
+      <div id="checkoutStepDetails" class="checkout-step active">
+        <form id="checkoutForm" class="checkout-form">
+          <div class="form-section-title">
+            <i class="fa-solid fa-user"></i> Customer & Delivery Details
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customerName">Full Name *</label>
+              <input type="text" id="customerName" placeholder="e.g. John Doe / សុខ ចាន់" required>
+            </div>
+            <div class="form-group">
+              <label for="customerPhone">Phone Number *</label>
+              <input type="tel" id="customerPhone" placeholder="e.g. 012 345 678" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="customerAddress">Delivery Address / City *</label>
+            <input type="text" id="customerAddress" placeholder="e.g. Street 271, Sangkat Boeung Tumpun, Phnom Penh" required>
+          </div>
+
+          <div class="form-group">
+            <label for="customerNotes">Order Notes (Optional)</label>
+            <input type="text" id="customerNotes" placeholder="Special delivery instructions or remarks...">
+          </div>
+
+          <div class="form-section-title">
+            <i class="fa-solid fa-money-bill-transfer"></i> Preferred Payment Currency
+          </div>
+
+          <div class="currency-selector-grid">
+            <label class="currency-option active">
+              <input type="radio" name="paymentCurrency" value="USD" checked>
+              <div class="currency-opt-content">
+                <div class="curr-icon">$</div>
+                <div>
+                  <strong>Pay in USD</strong>
+                  <span class="curr-sub">US Dollar</span>
+                </div>
+              </div>
+            </label>
+            <label class="currency-option">
+              <input type="radio" name="paymentCurrency" value="KHR">
+              <div class="currency-opt-content">
+                <div class="curr-icon">៛</div>
+                <div>
+                  <strong>Pay in KHR</strong>
+                  <span class="curr-sub">Khmer Riel (Rate: 4,100)</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="order-summary-mini">
+            <div class="mini-summary-header">Order Summary (<span id="miniItemCount">0</span> items)</div>
+            <div class="mini-summary-total">
+              <span>Payable Total:</span>
+              <strong id="miniPayableTotal">$0.00</strong>
+            </div>
+          </div>
+
+          <button type="submit" id="generateKhqrBtn" class="btn btn-primary btn-generate-qr">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Generate KHQR & Pay with ABA</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Step 2: Dynamic KHQR Payment & Real-Time Verification Screen -->
+      <div id="checkoutStepPayment" class="checkout-step">
+        <div class="payment-header-info">
+          <div class="order-code-banner">
+            <span>Order Reference:</span>
+            <strong id="payOrderCode" class="copyable-code">ORD-XXXXX <i class="fa-regular fa-copy"></i></strong>
+          </div>
+          <div class="countdown-timer-box">
+            <i class="fa-regular fa-clock"></i>
+            <span>Expires in:</span>
+            <strong id="countdownTimer">15:00</strong>
+          </div>
+        </div>
+
+        <!-- KHQR Card Visual (Exact Authentic ABA Merchant Card) -->
+        <div class="khqr-display-container" style="padding: 12px; background: #ffffff; border-radius: var(--radius-lg); text-align: center;">
+          <div class="merchant-real-card-wrapper" style="max-width: 320px; margin: 0 auto 12px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <img id="dynamicQrImage" src="/images/merchant_khqr_cropped.png" alt="ABA Merchant KHQR CHHIV SERHOUT" style="width: 100%; height: auto; display: block;">
+          </div>
+
+          <!-- Payable Amount Badge -->
+          <div class="payable-amount-box">
+            <div class="amount-primary" id="payAmountPrimary">$0.01</div>
+            <div class="amount-secondary" id="payAmountSecondary">៛41 KHR</div>
+          </div>
+
+          <!-- Real-Time Bot Listening Status Indicator -->
+          <div class="live-bot-status-pill">
+            <div class="radar-spinner"></div>
+            <span id="liveStatusText">Listening for ABA Telegram notification...</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="payment-action-buttons">
+          <!-- Direct Deep Link to ABA Mobile App -->
+          <a id="btnOpenAbaApp" href="#" class="btn btn-aba-direct" target="_blank" rel="noopener">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>Open in ABA Mobile App</span>
+          </a>
+
+          <!-- Direct Deep Link to Bakong App -->
+          <a id="btnOpenBakongApp" href="#" class="btn btn-bakong-direct" target="_blank" rel="noopener">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Open in Bakong App</span>
+          </a>
+
+          <!-- Copy KHQR Payload -->
+          <button id="btnCopyKhqr" class="btn btn-secondary btn-sm-action">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy KHQR Data</span>
+          </button>
+        </div>
+
+        <!-- Instructions Guide -->
+        <div class="payment-instructions">
+          <div class="instruction-title"><i class="fa-solid fa-circle-info"></i> How to Complete Payment:</div>
+          <ol>
+            <li>Open <strong>ABA Mobile</strong>, <strong>Bakong</strong>, or any Cambodian banking app.</li>
+            <li>Scan the QR code above or tap <strong>"Open in ABA Mobile App"</strong>.</li>
+            <li>Verify the amount & memo (<code><span id="instructOrderCode">ORD-XXXXX</span></code>) and confirm payment.</li>
+            <li>Our <strong>Telegram ABA Bot</strong> will automatically match your transfer and complete your order instantly!</li>
+          </ol>
+        </div>
+
+        <!-- Demo Test Trigger (Quick Simulation button for user convenience) -->
+        <div class="demo-instant-test">
+          <small class="text-muted"><i class="fa-solid fa-flask"></i> Testing right now?</small>
+          <button id="btnSimulateMatchFromModal" class="btn btn-test-match">
+            <i class="fa-brands fa-telegram"></i> Simulate ABA Telegram Payment Alert
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Payment Success / Digital Receipt Screen -->
+      <div id="checkoutStepSuccess" class="checkout-step">
+        <div class="success-celebration">
+          <div class="success-icon-wrapper">
+            <i class="fa-solid fa-circle-check success-check-icon"></i>
+            <div class="confetti-ring"></div>
+          </div>
+          <h3 class="success-title">Payment Successful!</h3>
+          <p class="success-subtitle">Your transaction has been verified via ABA Telegram Bot.</p>
+        </div>
+
+        <!-- Official Digital Receipt -->
+        <div class="receipt-card" id="printableReceipt">
+          <div class="receipt-header">
+            <div class="receipt-shop-info">
+              <h4>CAM-SHOP</h4>
+              <span>Official Purchase Receipt</span>
+            </div>
+            <div class="receipt-badge-paid">
+              <i class="fa-solid fa-check-double"></i> PAID
+            </div>
+          </div>
+
+          <div class="receipt-meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Order Code:</span>
+              <strong id="recOrderCode" class="meta-val">ORD-00000</strong>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Date & Time:</span>
+              <strong id="recPaidAt" class="meta-val">--</strong>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Customer:</span>
+              <strong id="recCustomerName" class="meta-val">--</strong>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Bank Ref / TID:</span>
+              <strong id="recBankRef" class="meta-val">--</strong>
+            </div>
+          </div>
+
+          <div class="receipt-items-list" id="recItemsList">
+            <!-- Items rendered dynamically -->
+          </div>
+
+          <div class="receipt-totals">
+            <div class="rec-total-row">
+              <span>Subtotal:</span>
+              <span id="recSubtotal">$0.00</span>
+            </div>
+            <div class="rec-total-row">
+              <span>Shipping:</span>
+              <span id="recShipping">$0.00</span>
+            </div>
+            <div class="rec-total-row rec-grand-total">
+              <div>
+                <strong>Total Paid:</strong>
+                <div class="rec-khr" id="recTotalKhr">៛0 KHR</div>
+              </div>
+              <strong class="rec-paid-amount" id="recTotalUsd">$0.00</strong>
+            </div>
+          </div>
+
+          <div class="receipt-verification-footer">
+            <i class="fa-brands fa-telegram"></i> Verified via ABA Merchant Telegram Bot Matching Engine
+          </div>
+        </div>
+
+        <div class="receipt-actions">
+          <button id="btnPrintReceipt" class="btn btn-secondary">
+            <i class="fa-solid fa-print"></i> Print Receipt
+          </button>
+          <button id="btnDoneShopping" class="btn btn-primary">
+            <i class="fa-solid fa-bag-shopping"></i> Continue Shopping
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Audio Chimes -->
+  <audio id="successAudio" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <div class="brand-logo footer-logo">
+          <div class="logo-icon"><i class="fa-solid fa-qrcode"></i></div>
+          <div class="logo-text">
+            <span class="logo-title">CAM<span class="gradient-text">SHOP</span></span>
+          </div>
+        </div>
+        <p class="footer-bio">Empowering modern retail in Cambodia with dynamic Bakong KHQR, ABA Mobile Pay, and automated Telegram bot transaction matching.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Accepted Payments</h5>
+        <div class="footer-banks">
+          <span class="bank-tag">ABA Bank</span>
+          <span class="bank-tag">Bakong KHQR</span>
+          <span class="bank-tag">ACLEDA</span>
+          <span class="bank-tag">Wing</span>
+          <span class="bank-tag">Canadia</span>
+          <span class="bank-tag">Sathapana</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Quick Links</h5>
+        <ul class="footer-links">
+          <li><a href="/"><i class="fa-solid fa-house"></i> Home Storefront</a></li>
+          <li><a href="/admin.html"><i class="fa-solid fa-robot"></i> Telegram Matcher Studio</a></li>
+          <li><a href="/admin.html#settings"><i class="fa-solid fa-gear"></i> Merchant & Bot Settings</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; 2026 CAM-SHOP. Built for high-speed Cambodian commerce.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

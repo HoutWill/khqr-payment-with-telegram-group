@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Matcher Studio & Admin | CAM-SHOP</title>
+  <meta name="description" content="Admin Dashboard and Telegram ABA Bot Transaction Matcher Studio for CAM-SHOP KHQR payments.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Admin Specific Styling */
+    .admin-nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 0;
+    }
+    .admin-nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 10px;
+    }
+    .admin-tab-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+    .admin-tab-btn.active, .admin-tab-btn:hover {
+      background: var(--telegram-gradient);
+      color: #fff;
+      border-color: transparent;
+    }
+    .admin-content {
+      padding: 28px 0 60px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .stat-icon-box.cyan { background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); }
+    .stat-icon-box.green { background: rgba(16, 185, 129, 0.15); color: var(--success-green); }
+    .stat-icon-box.blue { background: rgba(34, 158, 217, 0.15); color: var(--telegram-blue); }
+    .stat-icon-box.yellow { background: rgba(245, 158, 11, 0.15); color: var(--warning-yellow); }
+    
+    .stat-info span { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-info h3 { font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: #fff; }
+
+    /* Admin Panels */
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+
+    /* Table Styles */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    .table-header-bar {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    .admin-table th {
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .admin-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+    .admin-table tr:hover td {
+      background: var(--bg-surface);
+      color: #fff;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+    }
+    .status-badge.PAID { background: rgba(16, 185, 129, 0.2); color: var(--success-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-badge.PENDING { background: rgba(245, 158, 11, 0.2); color: var(--warning-yellow); border: 1px solid rgba(245, 158, 11, 0.4); }
+    .status-badge.EXPIRED { background: rgba(100, 116, 139, 0.2); color: var(--text-muted); }
+    .status-badge.CANCELLED { background: rgba(239, 68, 68, 0.2); color: var(--danger-red); }
+
+    /* Studio 2-column layout */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .studio-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+    .studio-title {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+    }
+    .template-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .template-chip {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .template-chip:hover {
+      background: var(--telegram-blue);
+      color: #fff;
+    }
+    .simulator-textarea {
+      width: 100%;
+      height: 150px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+      resize: vertical;
+    }
+    .simulator-textarea:focus {
+      border-color: var(--telegram-blue);
+      outline: none;
+    }
+    .parse-result-box {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border-color);
+      font-size: 0.84rem;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .studio-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <div class="container announcement-inner">
+      <span><i class="fa-solid fa-shield-halved text-accent"></i> <strong>Admin & Telegram Matcher Studio</strong> — Real-Time Bank Alert Processing</span>
+      <div>
+        <a href="/" class="admin-link"><i class="fa-solid fa-store"></i> Return to Storefront</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Sub Navigation -->
+  <nav class="admin-nav">
+    <div class="container admin-nav-inner">
+      <div class="brand-logo">
+        <div class="logo-icon"><i class="fa-solid fa-robot"></i></div>
+        <div class="logo-text">
+          <span class="logo-title">TELEGRAM <span class="gradient-text">STUDIO</span></span>
+          <span class="logo-subtitle">ABA BANK TRANSACTION MATCHER</span>
+        </div>
+      </div>
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" data-target="ordersPanel"><i class="fa-solid fa-receipt"></i> Orders</button>
+        <button class="admin-tab-btn" data-target="studioPanel"><i class="fa-brands fa-telegram"></i> Telegram Simulator</button>
+        <button class="admin-tab-btn" data-target="logsPanel"><i class="fa-solid fa-list-check"></i> Match Logs</button>
+        <button class="admin-tab-btn" data-target="settingsPanel"><i class="fa-solid fa-sliders"></i> Settings</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container admin-content">
+    
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-box cyan"><i class="fa-solid fa-bag-shopping"></i></div>
+        <div class="stat-info">
+          <span>Total Orders</span>
+          <h3 id="statTotalOrders">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box green"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
+        <div class="stat-info">
+          <span>Paid Revenue (USD)</span>
+          <h3 id="statPaidRevenue">$0.00</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box blue"><i class="fa-brands fa-telegram"></i></div>
+        <div class="stat-info">
+          <span>Telegram Auto-Matched</span>
+          <h3 id="statMatchedCount">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box yellow"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="stat-info">
+          <span>Pending KHQR</span>
+          <h3 id="statPendingCount">0</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. ORDERS PANEL -->
+    <div id="ordersPanel" class="admin-panel active">
+      <div class="table-container">
+        <div class="table-header-bar">
+          <h4><i class="fa-solid fa-receipt"></i> Customer Orders Feed</h4>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="orderSearchInput" placeholder="Filter by Order Code, Phone..." style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: var(--radius-full); color: #fff; font-size: 0.85rem;">
+            <button id="refreshOrdersBtn" class="btn btn-secondary" style="padding: 8px 14px;"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order Code</th>
+                <th>Customer</th>
+                <th>Amount (USD)</th>
+                <th>Amount (KHR)</th>
+                <th>Status</th>
+                <th>Matched Bank Ref</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 30px;">Loading orders...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TELEGRAM SIMULATOR STUDIO -->
+    <div id="studioPanel" class="admin-panel">
+      <div class="studio-grid">
+        <!-- Input & Templates -->
+        <div class="studio-card">
+          <div class="studio-title">
+            <i class="fa-brands fa-telegram telegram-color"></i>
+            <span>Simulate Incoming Telegram Alert</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+            Test how the matching engine processes incoming alerts from ABA Merchant Bot or Bakong in your Telegram group.
+          </p>
+
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">QUICK TEMPLATES:</label>
+          <div class="template-chips">
+            <button class="template-chip" id="tplAbaUsd"><i class="fa-solid fa-dollar-sign"></i> ABA USD Alert ($0.01)</button>
+            <button class="template-chip" id="tplAbaKhmer"><i class="fa-solid fa-language"></i> ABA Khmer/English ($0.01)</button>
+            <button class="template-chip" id="tplBakongKhr"><i class="fa-solid fa-money-bill"></i> Bakong KHR Alert (41 KHR)</button>
+            <button class="template-chip" id="tplMatchPending" style="border-color: var(--accent-cyan); color: var(--accent-cyan);"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Fill Latest Pending Order</button>
+          </div>
+
+          <div class="form-group">
+            <label for="simSender">Sender Name:</label>
+            <input type="text" id="simSender" value="SOK CHANDARA" placeholder="Customer name">
+          </div>
+
+          <div class="form-group">
+            <label for="simMessageText">Telegram Alert Message Body:</label>
+            <textarea id="simMessageText" class="simulator-textarea" placeholder="Paste ABA Bank notification text here..."></textarea>
+          </div>
+
+          <button id="btnRunSimulation" class="btn btn-primary" style="width: 100%; background: var(--telegram-gradient);">
+            <i class="fa-solid fa-paper-plane"></i> Send & Match Message
+          </button>
+        </div>
+
+        <!-- Real-Time Parser Inspection & Result -->
+        <div class="studio-card">
+          <div class="studio-title">
+            <i class="fa-solid fa-microchip text-accent"></i>
+            <span>Parser Breakdown & Matching Verdict</span>
+          </div>
+
+          <div class="parse-result-box" id="parseInspectBox">
+            <div class="result-row"><span>Status:</span> <strong id="resMatchStatus" style="color: var(--text-muted);">Ready to test</strong></div>
+            <div class="result-row"><span>Extracted Order Code:</span> <strong id="resOrderCode" style="color: var(--accent-cyan);">--</strong></div>
+            <div class="result-row"><span>Extracted Amount:</span> <strong id="resAmount">--</strong></div>
+            <div class="result-row"><span>Extracted Currency:</span> <strong id="resCurrency">--</strong></div>
+            <div class="result-row"><span>Extracted Sender:</span> <strong id="resSender">--</strong></div>
+            <div class="result-row"><span>Transaction Reference:</span> <strong id="resRef">--</strong></div>
+            <div class="result-row"><span>Matching Strategy:</span> <strong id="resStrategy">--</strong></div>
+          </div>
+
+          <div id="simulationOutputDetails" style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 14px; border: 1px solid var(--border-color); font-size: 0.82rem; color: var(--text-secondary); min-height: 120px;">
+            Simulate a message on the left to view the complete matching lifecycle and JSON payload.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MATCH LOGS PANEL -->
+    <div id="logsPanel" class="admin-panel">
+      <div class="table-container">
+        <div class="table-header-bar">
+          <h4><i class="fa-solid fa-list-check"></i> Telegram Group Transaction Logs</h4>
+          <button id="refreshLogsBtn" class="btn btn-secondary" style="padding: 8px 14px;"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Source</th>
+                <th>Extracted Code</th>
+                <th>Amount</th>
+                <th>Sender</th>
+                <th>Ref ID</th>
+                <th>Match Result</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <tr><td colspan="7" style="text-align: center; padding: 30px;">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SETTINGS PANEL -->
+    <div id="settingsPanel" class="admin-panel">
+      <div class="studio-card" style="max-width: 720px; margin: 0 auto;">
+        <div class="studio-title">
+          <i class="fa-solid fa-gear text-accent"></i>
+          <span>Merchant & Telegram Bot Configuration</span>
+        </div>
+
+        <form id="settingsForm">
+          <div class="form-section-title"><i class="fa-brands fa-telegram"></i> Telegram Group Bot Integration</div>
+
+          <div class="form-group">
+            <label for="setTelegramToken">Telegram Bot Token (from @BotFather):</label>
+            <input type="text" id="setTelegramToken" placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRstuVWXyz">
+            <small class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 4px;">Create a bot on Telegram via @BotFather and paste the token here.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="setTelegramGroup">Merchant Telegram Group Chat ID:</label>
+            <input type="text" id="setTelegramGroup" placeholder="e.g. -1001234567890">
+            <small class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 4px;">Add your bot to the Telegram group where ABA alerts are received.</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="setTelegramEnabled" style="width: auto;">
+                <span>Enable Live Telegram Polling</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="setAutoReply" style="width: auto;">
+                <span>Auto-reply confirmation in group</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section-title"><i class="fa-solid fa-key"></i> Telegram MTProto API (Optional - for 100% Direct ABA Bot Reading)</div>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 12px;">
+            Get these from <a href="https://my.telegram.org" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">my.telegram.org</a> if you want your server to automatically read ABA Merchant Bot messages without manual forwarding.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setTelegramApiId">Telegram API ID:</label>
+              <input type="text" id="setTelegramApiId" placeholder="e.g. 28491029">
+            </div>
+            <div class="form-group">
+              <label for="setTelegramApiHash">Telegram API Hash:</label>
+              <input type="text" id="setTelegramApiHash" placeholder="e.g. 8f9b2d3e4a5c6d7e8f9a0b1c2d3e4f5a">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="setTelegramSession">Telegram Session String (Optional):</label>
+            <input type="text" id="setTelegramSession" placeholder="Saved string session for MTProto">
+          </div>
+
+          <div class="form-section-title"><i class="fa-solid fa-building-columns"></i> Merchant & KHQR Parameters</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setBakongId">Bakong Merchant Account ID:</label>
+              <input type="text" id="setBakongId" placeholder="e.g. merchant_name@abaa" required>
+            </div>
+            <div class="form-group">
+              <label for="setMerchantName">Merchant Business Name:</label>
+              <input type="text" id="setMerchantName" placeholder="e.g. ABA SMART STORE" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setMerchantCity">City:</label>
+              <input type="text" id="setMerchantCity" placeholder="Phnom Penh" required>
+            </div>
+            <div class="form-group">
+              <label for="setExchangeRate">USD to KHR Rate:</label>
+              <input type="number" id="setExchangeRate" placeholder="4100" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="setExpiry">Order Expiry (Minutes):</label>
+            <input type="number" id="setExpiry" placeholder="15" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Configuration
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
