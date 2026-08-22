@@ -15,25 +15,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-const telegramUserBot = require('./telegramUserBot');
-
 // Initialize Telegram Bot
 telegramMatcher.initBot();
 
 // Start MTProto UserBot only in persistent server environments (local / Render / VPS)
 if (!process.env.VERCEL) {
-  const session = process.env.TELEGRAM_SESSION || db.getSettings().telegramSession;
-  const apiId = process.env.TELEGRAM_API_ID || db.getSettings().telegramApiId;
-  const apiHash = process.env.TELEGRAM_API_HASH || db.getSettings().telegramApiHash;
-  const groupId = process.env.TELEGRAM_GROUP_ID || db.getSettings().telegramGroupId;
+  try {
+    const telegramUserBot = require('./telegramUserBot');
+    const session = process.env.TELEGRAM_SESSION || db.getSettings().telegramSession;
+    const apiId = process.env.TELEGRAM_API_ID || db.getSettings().telegramApiId;
+    const apiHash = process.env.TELEGRAM_API_HASH || db.getSettings().telegramApiHash;
+    const groupId = process.env.TELEGRAM_GROUP_ID || db.getSettings().telegramGroupId;
 
-  if (session && apiId && apiHash) {
-    telegramUserBot.start({
-      apiId,
-      apiHash,
-      sessionString: session,
-      targetChatId: groupId
-    });
+    if (session && apiId && apiHash) {
+      telegramUserBot.start({
+        apiId,
+        apiHash,
+        sessionString: session,
+        targetChatId: groupId
+      });
+    }
+  } catch (err) {
+    console.warn('MTProto UserBot init skipped:', err.message);
   }
 }
 
