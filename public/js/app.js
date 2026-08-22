@@ -166,7 +166,7 @@ async function fetchProducts() {
     elements.productGrid.innerHTML = `
       <div class="empty-grid-state">
         <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: var(--danger-red); margin-bottom: 12px;"></i>
-        <p>Failed to connect to server. Make sure the backend server is running on port 3000.</p>
+        <p>Unable to load products. Please check your network connection.</p>
       </div>
     `;
   }

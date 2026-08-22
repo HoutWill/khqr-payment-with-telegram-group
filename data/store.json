@@ -765,6 +765,25 @@
   ],
   "telegramLogs": [
     {
+      "id": "log-1787386951571-sy4v",
+      "timestamp": "2026-08-22T08:22:31.571Z",
+      "source": "MTPROTO_USERBOT",
+      "rawText": "៛41,000 paid by PHANG CHRY (*933) on Aug 22, 03:22 PM via ABA PAY at CHHIV KIHEANG. Trx. ID: 178738695179719, APV: 951686.",
+      "parsedAmount": 41000,
+      "parsedCurrency": "KHR",
+      "parsedOrderCode": null,
+      "senderName": "Anonymous Customer",
+      "reference": "REF-951571",
+      "matchStrategy": "NONE",
+      "matched": false,
+      "matchedOrderId": null,
+      "matchedOrderCode": null,
+      "meta": {
+        "chatId": "-4889670069",
+        "messageId": 87636
+      }
+    },
+    {
       "id": "log-1787386586303-vg9n",
       "timestamp": "2026-08-22T08:16:26.303Z",
       "source": "MTPROTO_USERBOT",
