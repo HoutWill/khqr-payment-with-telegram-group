@@ -765,6 +765,44 @@
   ],
   "telegramLogs": [
     {
+      "id": "log-1787388392009-b49v",
+      "timestamp": "2026-08-22T08:46:32.009Z",
+      "source": "MTPROTO_USERBOT",
+      "rawText": "$0.01 paid by Serhout Chhiv (*774) on Aug 22, 03:46 PM via ABA KHQR (BKRTKHPPXXX) at CHHIV SERHOUT. Trx. ID: 178738839125244, APV: 862467.",
+      "parsedAmount": 0.01,
+      "parsedCurrency": "USD",
+      "parsedOrderCode": null,
+      "senderName": "Serhout Chhiv",
+      "reference": "178738839125244",
+      "matchStrategy": "NONE",
+      "matched": false,
+      "matchedOrderId": null,
+      "matchedOrderCode": null,
+      "meta": {
+        "chatId": "-1004441499255",
+        "messageId": 86
+      }
+    },
+    {
+      "id": "log-1787388267091-8vkx",
+      "timestamp": "2026-08-22T08:44:27.091Z",
+      "source": "MTPROTO_USERBOT",
+      "rawText": "🎉 NEW ORDERS!\n\n👤 ꧁ঔ**** just bought 1× GEMINI PRO\n💰 $1.41/account\n👤 ST**** just bought 1× GEMINI PRO\n💰 $1.39/account\n\n💨 Delivered automatically in seconds!\n🛒 Limited stock — buy now before it's gone!",
+      "parsedAmount": 1.41,
+      "parsedCurrency": "USD",
+      "parsedOrderCode": null,
+      "senderName": "Anonymous Customer",
+      "reference": "REF-267091",
+      "matchStrategy": "NONE",
+      "matched": false,
+      "matchedOrderId": null,
+      "matchedOrderCode": null,
+      "meta": {
+        "chatId": "8783883252",
+        "messageId": 87638
+      }
+    },
+    {
       "id": "log-1787387477712-dmsc",
       "timestamp": "2026-08-22T08:31:17.712Z",
       "source": "MTPROTO_USERBOT",

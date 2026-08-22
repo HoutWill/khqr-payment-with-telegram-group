@@ -172,8 +172,8 @@ api.post('/orders', async (req, res) => {
   }
 });
 
-// 3. GET ORDER DETAILS & STATUS
-api.get('/orders/:id', (req, res) => {
+// 3. GET ORDER DETAILS & STATUS (Supports both /orders/:id and /orders/:id/status)
+api.get(['/orders/:id', '/orders/:id/status'], (req, res) => {
   const orderId = req.params.id;
   let order = db.getOrderById(orderId);
   if (!order) {
