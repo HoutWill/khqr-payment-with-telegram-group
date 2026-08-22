@@ -75,17 +75,15 @@ class TelegramMatcher extends EventEmitter {
       this.groupId = groupId;
 
       try {
-        this.bot = new TelegramBot(token, { polling: true });
+        this.bot = new TelegramBot(token, { polling: { params: { timeout: 10 } } });
         this.isPolling = true;
-
-        console.log('🤖 Telegram Bot listener started successfully for group:', groupId || 'Any group');
 
         // 1. Listen for Group Messages
         this.bot.on('message', (msg) => {
           this.handleIncomingTelegramMessage(msg);
         });
 
-        // 2. Listen for Channel Posts (in case ABA alerts to a Channel)
+        // 2. Listen for Channel Posts
         this.bot.on('channel_post', (msg) => {
           this.handleIncomingTelegramMessage(msg);
         });
@@ -94,7 +92,10 @@ class TelegramMatcher extends EventEmitter {
         this.setupBotCommands();
 
         this.bot.on('polling_error', (err) => {
-          console.warn('Telegram polling notice:', err.message);
+          // Suppress 409 conflict notices when multiple environments are active
+          if (!err.message.includes('409 Conflict')) {
+            console.warn('Telegram polling notice:', err.message);
+          }
         });
       } catch (err) {
         console.error('Failed to initialize Telegram Bot:', err.message);
@@ -232,20 +233,23 @@ class TelegramMatcher extends EventEmitter {
     }
 
     // 2. Match Currency and Amount
-    // Handles $0.01, USD 0.01, 0.01 USD, 41 KHR, KHR 41, 41៛, 60,000 KHR, etc.
-    const usdPattern = /(?:\$|USD)\s*([0-9]+(?:\.[0-9]{1,2})?)|([0-9]+(?:\.[0-9]{1,2})?)\s*(?:\$|USD)/i;
-    const khrPattern = /(?:KHR|៛|រៀល)\s*([0-9,]+)|([0-9,]+)\s*(?:KHR|៛|រៀល)/i;
+    // Handles $0.01, USD 0.01, 0.01 USD, 41 KHR, KHR 41, 41៛, 60,000 KHR, .01 paid by, 0.01 paid by
+    const usdMatch = text.match(/(?:\$|USD)\s*([0-9]+(?:\.[0-9]{1,2})?)/i) || 
+                     text.match(/([0-9]+(?:\.[0-9]{1,2})?)\s*(?:\$|USD)/i) ||
+                     text.match(/^[\$]?([0-9]*\.[0-9]{1,2})\s+paid\s+by/i) ||
+                     text.match(/\b([0-9]+\.[0-9]{2})\b/);
 
-    const usdMatch = text.match(usdPattern);
-    const khrMatch = text.match(khrPattern);
+    const khrMatch = text.match(/(?:KHR|៛|រៀល)\s*([0-9,]+)/i) || 
+                     text.match(/([0-9,]+)\s*(?:KHR|៛|រៀល)/i) ||
+                     text.match(/^៛?\s*([0-9,]+)\s+paid\s+by/i);
 
     if (usdMatch) {
-      const rawVal = usdMatch[1] || usdMatch[2];
-      result.amount = parseFloat(rawVal);
+      const rawVal = usdMatch[1] || usdMatch[2] || usdMatch[0];
+      result.amount = parseFloat(rawVal.replace(/[^0-9.]/g, ''));
       result.currency = 'USD';
     } else if (khrMatch) {
-      const rawVal = (khrMatch[1] || khrMatch[2]).replace(/,/g, '');
-      result.amount = parseFloat(rawVal);
+      const rawVal = (khrMatch[1] || khrMatch[2] || khrMatch[0]).replace(/,/g, '');
+      result.amount = parseFloat(rawVal.replace(/[^0-9.]/g, ''));
       result.currency = 'KHR';
     } else {
       const generalAmountMatch = text.match(/(?:Amount|Received|Paid|ចំនួនទឹកប្រាក់|ប្រាក់):\s*(?:[\$|USD|KHR])?\s*([0-9]+(?:\.[0-9]{1,2})?)/i);
