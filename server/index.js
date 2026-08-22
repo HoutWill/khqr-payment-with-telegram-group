@@ -1,10 +1,7 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const QRCode = require('qrcode');
-const { v4: uuidv4 } = require('uuid');
-
 const db = require('./db');
 const { generateKHQR, generateDeepLinks } = require('./khqr');
 const telegramMatcher = require('./telegramMatcher');
@@ -47,63 +44,59 @@ function generateOrderCode() {
 }
 
 // ----------------------------------------------------
-// 1. PRODUCTS API
+// API ROUTER (Mounts to both /api and / for Vercel)
 // ----------------------------------------------------
-app.get('/api/products', (req, res) => {
+const api = express.Router();
+
+// 1. PRODUCTS API
+api.get('/products', (req, res) => {
   const products = db.getProducts();
   const categories = ['All', ...new Set(products.map(p => p.category))];
   res.json({ success: true, products, categories });
 });
 
-// ----------------------------------------------------
 // 2. CREATE ORDER & GENERATE DYNAMIC KHQR
-// ----------------------------------------------------
-app.post('/api/orders', async (req, res) => {
+api.post('/orders', async (req, res) => {
   try {
     const { items, customer, currency = 'USD' } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'Cart items are required' });
+    if (!items || !items.length) {
+      return res.status(400).json({ success: false, message: 'Cart is empty' });
+    }
+
+    const allProducts = db.getProducts();
+    let subtotalUsd = 0;
+    const orderItems = [];
+
+    for (const item of items) {
+      const product = allProducts.find(p => p.id === item.id);
+      if (product) {
+        const qty = parseInt(item.quantity) || 1;
+        const lineTotal = product.priceUsd * qty;
+        subtotalUsd += lineTotal;
+        orderItems.push({
+          id: product.id,
+          name: product.name,
+          priceUsd: product.priceUsd,
+          quantity: qty,
+          image: product.image,
+          category: product.category,
+          subtotalUsd: lineTotal
+        });
+      }
     }
 
     const settings = db.getSettings();
     const exchangeRate = settings.exchangeRateUsdToKhr || 4100;
-    const expiryMinutes = settings.orderExpiryMinutes || 15;
-
-    // Validate and compute totals
-    let subtotalUsd = 0;
-    const validatedItems = [];
-
-    for (const item of items) {
-      const product = db.getProductById(item.id);
-      if (!product) {
-        return res.status(400).json({ success: false, message: `Product not found: ${item.id}` });
-      }
-      const qty = Math.max(1, parseInt(item.quantity) || 1);
-      const itemSubtotal = product.priceUsd * qty;
-      subtotalUsd += itemSubtotal;
-      validatedItems.push({
-        id: product.id,
-        name: product.name,
-        priceUsd: product.priceUsd,
-        quantity: qty,
-        image: product.image,
-        category: product.category,
-        subtotalUsd: itemSubtotal
-      });
-    }
-
-    const shippingUsd = 0; // Free shipping
-    const totalUsd = Number((subtotalUsd + shippingUsd).toFixed(2));
+    const shippingUsd = 0.00; // Free delivery for testing
+    const totalUsd = Math.round((subtotalUsd + shippingUsd) * 100) / 100;
     const totalKhr = Math.round(totalUsd * exchangeRate);
 
-    // Generate unique Order ID & Code
-    const orderId = uuidv4();
     const orderCode = generateOrderCode();
     const now = new Date();
+    const expiryMinutes = settings.orderExpiryMinutes || 15;
     const expiresAt = new Date(now.getTime() + expiryMinutes * 60 * 1000).toISOString();
 
-    // Generate Dynamic EMVCo KHQR String
     const khqrCurrency = currency.toUpperCase() === 'KHR' ? 'KHR' : 'USD';
     const khqrAmount = khqrCurrency === 'KHR' ? totalKhr : totalUsd;
 
@@ -123,7 +116,7 @@ app.post('/api/orders', async (req, res) => {
       margin: 2,
       width: 400,
       color: {
-        dark: '#0e1e38', // ABA Navy tone
+        dark: '#0e1e38',
         light: '#ffffff'
       }
     });
@@ -136,15 +129,13 @@ app.post('/api/orders', async (req, res) => {
       orderId: orderCode
     });
 
-    // Save order in database
-    const order = {
-      id: orderId,
+    const newOrder = {
       orderCode,
-      customerName: customer?.name || 'Valued Customer',
-      customerPhone: customer?.phone || '',
-      customerAddress: customer?.address || '',
-      notes: customer?.notes || '',
-      items: validatedItems,
+      customerName: customer ? customer.name : 'Valued Customer',
+      customerPhone: customer ? customer.phone : '',
+      customerAddress: customer ? customer.address : '',
+      notes: customer ? customer.notes : '',
+      items: orderItems,
       subtotalUsd,
       shippingUsd,
       totalUsd,
@@ -161,59 +152,51 @@ app.post('/api/orders', async (req, res) => {
       matchedTransaction: null
     };
 
-    db.createOrder(order);
+    const savedOrder = db.createOrder(newOrder);
 
     res.status(201).json({
       success: true,
-      order
+      order: savedOrder,
+      merchant: {
+        name: settings.merchantName || 'CHHIV SERHOUT',
+        bakongId: settings.bakongAccountId || 'abaakhppxxx@abaa',
+        city: settings.merchantCity || 'PHNOM PENH'
+      }
     });
   } catch (error) {
     console.error('Error creating order:', error);
-    res.status(500).json({ success: false, message: 'Server error creating order', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error while generating KHQR order' });
   }
 });
 
-// ----------------------------------------------------
-// 3. GET ORDER BY ID & STATUS
-// ----------------------------------------------------
-app.get('/api/orders/:id', (req, res) => {
-  const order = db.getOrderById(req.params.id);
+// 3. GET ORDER DETAILS & STATUS
+api.get('/orders/:id', (req, res) => {
+  const orderId = req.params.id;
+  let order = db.getOrderById(orderId);
+  if (!order) {
+    order = db.getOrderByCode(orderId);
+  }
+
   if (!order) {
     return res.status(404).json({ success: false, message: 'Order not found' });
   }
 
-  // Check if expired
-  if (order.status === 'PENDING' && new Date(order.expiresAt) < new Date()) {
-    order.status = 'EXPIRED';
-    db.updateOrder(order.id, { status: 'EXPIRED' });
-  }
-
-  res.json({ success: true, order });
-});
-
-app.get('/api/orders/:id/status', (req, res) => {
-  const order = db.getOrderById(req.params.id);
-  if (!order) {
-    return res.status(404).json({ success: false, message: 'Order not found' });
-  }
-
-  if (order.status === 'PENDING' && new Date(order.expiresAt) < new Date()) {
-    order.status = 'EXPIRED';
-    db.updateOrder(order.id, { status: 'EXPIRED' });
+  // Check if order expired
+  if (order.status === 'PENDING' && new Date() > new Date(order.expiresAt)) {
+    order = db.updateOrder(order.id, { status: 'EXPIRED' });
   }
 
   res.json({
     success: true,
     status: order.status,
     paidAt: order.paidAt,
-    matchedTransaction: order.matchedTransaction
+    matchedTransaction: order.matchedTransaction,
+    order
   });
 });
 
-// ----------------------------------------------------
 // 4. REAL-TIME SERVER-SENT EVENTS (SSE) STREAM
-// ----------------------------------------------------
-app.get('/api/orders/:id/stream', (req, res) => {
+api.get('/orders/:id/stream', (req, res) => {
   const orderId = req.params.id;
   const order = db.getOrderById(orderId);
 
@@ -238,7 +221,6 @@ app.get('/api/orders/:id/stream', (req, res) => {
 
   telegramMatcher.on('orderPaid', onOrderPaid);
 
-  // Keep-alive heartbeat every 15 seconds
   const heartbeat = setInterval(() => {
     res.write(`: heartbeat\n\n`);
   }, 15000);
@@ -249,10 +231,8 @@ app.get('/api/orders/:id/stream', (req, res) => {
   });
 });
 
-// ----------------------------------------------------
 // 4.1 TELEGRAM WEBHOOK ENDPOINT (FOR VERCEL SERVERLESS)
-// ----------------------------------------------------
-app.post('/api/telegram-webhook', async (req, res) => {
+api.post('/telegram-webhook', async (req, res) => {
   try {
     const update = req.body;
     if (update && (update.message || update.channel_post)) {
@@ -266,8 +246,8 @@ app.post('/api/telegram-webhook', async (req, res) => {
   }
 });
 
-// Set Webhook helper endpoint
-app.get('/api/admin/set-telegram-webhook', async (req, res) => {
+// 4.2 SET WEBHOOK HELPER
+api.get('/admin/set-telegram-webhook', async (req, res) => {
   const { url } = req.query;
   const token = process.env.TELEGRAM_BOT_TOKEN || db.getSettings().telegramBotToken;
   if (!token) return res.status(400).json({ success: false, message: 'No Bot Token configured' });
@@ -283,21 +263,18 @@ app.get('/api/admin/set-telegram-webhook', async (req, res) => {
   }
 });
 
-// ----------------------------------------------------
 // 5. ADMIN & TELEGRAM MATCHER ENDPOINTS
-// ----------------------------------------------------
-app.get('/api/admin/orders', (req, res) => {
+api.get('/admin/orders', (req, res) => {
   const orders = db.getOrders();
   res.json({ success: true, orders });
 });
 
-app.get('/api/admin/logs', (req, res) => {
+api.get('/admin/logs', (req, res) => {
   const logs = db.getTelegramLogs();
   res.json({ success: true, logs });
 });
 
-// Simulate incoming ABA Telegram notification
-app.post('/api/admin/simulate-telegram', (req, res) => {
+api.post('/admin/simulate-telegram', (req, res) => {
   const { text, senderName } = req.body;
   if (!text) {
     return res.status(400).json({ success: false, message: 'Telegram message text is required' });
@@ -306,17 +283,15 @@ app.post('/api/admin/simulate-telegram', (req, res) => {
   const result = telegramMatcher.simulateMessage(text, senderName);
   res.json({
     success: true,
-    matched: result.success,
+    matched: result.matched,
     result
   });
 });
 
-// Settings
-app.get('/api/admin/settings', (req, res) => {
+api.get('/admin/settings', (req, res) => {
   const settings = db.getSettings();
-  // Mask sensitive bot token partially for display
-  const maskedToken = settings.telegramBotToken 
-    ? settings.telegramBotToken.slice(0, 6) + '...' + settings.telegramBotToken.slice(-4)
+  const maskedToken = settings.telegramBotToken
+    ? settings.telegramBotToken.slice(0, 8) + '...' + settings.telegramBotToken.slice(-4)
     : '';
 
   res.json({
@@ -329,7 +304,7 @@ app.get('/api/admin/settings', (req, res) => {
   });
 });
 
-app.post('/api/admin/settings', (req, res) => {
+api.post('/admin/settings', (req, res) => {
   const {
     telegramBotToken,
     telegramGroupId,
@@ -345,12 +320,9 @@ app.post('/api/admin/settings', (req, res) => {
     autoReplyTelegram
   } = req.body;
 
-  const currentSettings = db.getSettings();
   const updates = {};
 
-  if (telegramBotToken !== undefined) {
-    updates.telegramBotToken = telegramBotToken.trim();
-  }
+  if (telegramBotToken !== undefined) updates.telegramBotToken = telegramBotToken.trim();
   if (telegramGroupId !== undefined) updates.telegramGroupId = telegramGroupId.trim();
   if (telegramEnabled !== undefined) updates.telegramEnabled = Boolean(telegramEnabled);
   if (telegramApiId !== undefined) updates.telegramApiId = telegramApiId.trim();
@@ -369,9 +341,8 @@ app.post('/api/admin/settings', (req, res) => {
   res.json({ success: true, settings: newSettings });
 });
 
-// Manual Order Action (Mark Paid or Cancel)
-app.post('/api/admin/orders/:id/action', (req, res) => {
-  const { action, note } = req.body;
+api.post('/admin/orders/:id/action', (req, res) => {
+  const { action } = req.body;
   const order = db.getOrderById(req.params.id);
   if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
@@ -399,10 +370,9 @@ app.post('/api/admin/orders/:id/action', (req, res) => {
   res.status(400).json({ success: false, message: 'Invalid action' });
 });
 
-// Fallback to index.html for client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
+// Mount router on both /api and root (to handle all Vercel and local configurations)
+app.use('/api', api);
+app.use('/', api);
 
 // Start Server (only when run directly, not when imported on Vercel)
 if (require.main === module) {
