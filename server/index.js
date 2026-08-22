@@ -20,21 +20,24 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const telegramUserBot = require('./telegramUserBot');
 
-// Initialize Telegram Bot & UserBot if configured
+// Initialize Telegram Bot
 telegramMatcher.initBot();
 
-const session = process.env.TELEGRAM_SESSION || db.getSettings().telegramSession;
-const apiId = process.env.TELEGRAM_API_ID || db.getSettings().telegramApiId;
-const apiHash = process.env.TELEGRAM_API_HASH || db.getSettings().telegramApiHash;
-const groupId = process.env.TELEGRAM_GROUP_ID || db.getSettings().telegramGroupId;
+// Start MTProto UserBot only in persistent server environments (local / Render / VPS)
+if (!process.env.VERCEL) {
+  const session = process.env.TELEGRAM_SESSION || db.getSettings().telegramSession;
+  const apiId = process.env.TELEGRAM_API_ID || db.getSettings().telegramApiId;
+  const apiHash = process.env.TELEGRAM_API_HASH || db.getSettings().telegramApiHash;
+  const groupId = process.env.TELEGRAM_GROUP_ID || db.getSettings().telegramGroupId;
 
-if (session && apiId && apiHash) {
-  telegramUserBot.start({
-    apiId,
-    apiHash,
-    sessionString: session,
-    targetChatId: groupId
-  });
+  if (session && apiId && apiHash) {
+    telegramUserBot.start({
+      apiId,
+      apiHash,
+      sessionString: session,
+      targetChatId: groupId
+    });
+  }
 }
 
 // Generate Random 5-Digit Order Code

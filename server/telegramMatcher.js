@@ -54,6 +54,17 @@ class TelegramMatcher extends EventEmitter {
       return;
     }
 
+    // In Vercel serverless environment, instantiate without polling
+    if (process.env.VERCEL) {
+      if (token && (!this.bot || this.botToken !== token)) {
+        this.botToken = token;
+        this.groupId = groupId;
+        this.bot = new TelegramBot(token, { polling: false });
+        console.log('🤖 Telegram Bot ready for Vercel Webhooks (polling disabled)');
+      }
+      return;
+    }
+
     // Reinitialize if token changed or bot not started
     if (this.botToken !== token || !this.bot) {
       if (this.bot && this.isPolling) {
