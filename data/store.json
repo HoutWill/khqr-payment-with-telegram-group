@@ -765,22 +765,41 @@
   ],
   "telegramLogs": [
     {
-      "id": "log-1787386951571-sy4v",
-      "timestamp": "2026-08-22T08:22:31.571Z",
+      "id": "log-1787387477712-dmsc",
+      "timestamp": "2026-08-22T08:31:17.712Z",
       "source": "MTPROTO_USERBOT",
-      "rawText": "៛41,000 paid by PHANG CHRY (*933) on Aug 22, 03:22 PM via ABA PAY at CHHIV KIHEANG. Trx. ID: 178738695179719, APV: 951686.",
-      "parsedAmount": 41000,
+      "rawText": "$0.01 paid by Serhout Chhiv (*774) on Aug 22, 03:31 PM via ABA KHQR (BKRTKHPPXXX) at CHHIV SERHOUT. Trx. ID: 178738747732390, APV: 248179.",
+      "parsedAmount": 0.01,
+      "parsedCurrency": "USD",
+      "parsedOrderCode": null,
+      "senderName": "Anonymous Customer",
+      "reference": "REF-477712",
+      "matchStrategy": "NONE",
+      "matched": false,
+      "matchedOrderId": null,
+      "matchedOrderCode": null,
+      "meta": {
+        "chatId": "-1004441499255",
+        "messageId": 84
+      }
+    },
+    {
+      "id": "log-1787387406347-dg68",
+      "timestamp": "2026-08-22T08:30:06.347Z",
+      "source": "MTPROTO_USERBOT",
+      "rawText": "៛6,000 paid by SAO SOVAN (*310) on Aug 22, 03:30 PM via ABA PAY at CHHIV KIHEANG. Trx. ID: 178738740516998, APV: 318800.",
+      "parsedAmount": 6000,
       "parsedCurrency": "KHR",
       "parsedOrderCode": null,
       "senderName": "Anonymous Customer",
-      "reference": "REF-951571",
+      "reference": "REF-406347",
       "matchStrategy": "NONE",
       "matched": false,
       "matchedOrderId": null,
       "matchedOrderCode": null,
       "meta": {
         "chatId": "-4889670069",
-        "messageId": 87636
+        "messageId": 87637
       }
     },
     {

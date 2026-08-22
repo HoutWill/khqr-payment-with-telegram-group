@@ -256,13 +256,14 @@ class TelegramMatcher extends EventEmitter {
     }
 
     // 3. Match Sender Name
-    const senderMatch = text.match(/(?:From|Sender|ពី|ឈ្មោះអ្នកផ្ញើ):\s*([A-Za-z0-9\s._-]+?)(?:\n|\r|Remark|Memo|Txn|Ref|Date|$)/i);
+    const senderMatch = text.match(/paid\s+by\s+([A-Za-z\s]+?)(?:\s*\(\*\d+\))?\s+on/i) ||
+                        text.match(/(?:From|Sender|ពី|ឈ្មោះអ្នកផ្ញើ):\s*([A-Za-z0-9\s._-]+?)(?:\n|\r|Remark|Memo|Txn|Ref|Date|$)/i);
     if (senderMatch) {
       result.senderName = senderMatch[1].trim();
     }
 
     // 4. Match Reference / Transaction ID
-    const refMatch = text.match(/(?:Ref|Txn ID|Transaction ID|TID|Trace|លេខប្រតិបត្តិការ):\s*([A-Za-z0-9_-]+)/i);
+    const refMatch = text.match(/(?:Trx\.\s*ID|Txn\s*ID|Transaction\s*ID|Ref|TID|Trace|លេខប្រតិបត្តិការ):\s*([A-Za-z0-9_-]+)/i);
     if (refMatch) {
       result.reference = refMatch[1].trim();
     }
