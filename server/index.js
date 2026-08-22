@@ -401,8 +401,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// Start Server (only if not required as a module in serverless)
-if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+// Start Server (only when run directly, not when imported on Vercel)
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`🚀 KHQR E-Commerce Server is running on port ${PORT}`);
